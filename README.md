@@ -70,6 +70,9 @@ Este servicio web permite a los usuarios registrarse y autenticarse utilizando s
 └── index.js
 ```
 
+``
+# API Documentation
+
 ## **Uso**
 
 ### **Registro de Usuario**
@@ -79,6 +82,7 @@ Este servicio web permite a los usuarios registrarse y autenticarse utilizando s
   ```json
   {
     "username": "exampleUser",
+    "email": "example@example.com",
     "password": "examplePassword"
   }
   ```
@@ -89,7 +93,93 @@ Este servicio web permite a los usuarios registrarse y autenticarse utilizando s
 - **Cuerpo de la solicitud:**
   ```json
   {
-    "username": "exampleUser",
+    "email": "example@example.com",
     "password": "examplePassword"
+  }
+  ```
+
+### **Obtener Todos los Usuarios**
+- **Endpoint:** `GET /api/auth/users`
+- **Descripción:** Obtiene una lista de todos los usuarios registrados.
+- **Respuesta de ejemplo:**
+  ```json
+  [
+    {
+      "_id": "userId1",
+      "username": "exampleUser1",
+      "email": "example1@example.com",
+      "password": "hashedPassword1"
+    },
+    {
+      "_id": "userId2",
+      "username": "exampleUser2",
+      "email": "example2@example.com",
+      "password": "hashedPassword2"
+    }
+  ]
+  ```
+
+### **Obtener Usuario por ID**
+- **Endpoint:** `GET /api/auth/user/:id`
+- **Descripción:** Obtiene un usuario específico por ID.
+- **Parámetro de ruta:**
+  - `id`: El ID del usuario que se desea obtener.
+- **Respuesta de ejemplo:**
+  ```json
+  {
+    "_id": "userId",
+    "username": "exampleUser",
+    "email": "example@example.com",
+    "password": "hashedPassword"
+  }
+  ```
+
+### **Actualizar Usuario**
+- **Endpoint:** `PUT /api/auth/user/:id`
+- **Descripción:** Actualiza la información de un usuario específico por ID.
+- **Parámetro de ruta:**
+  - `id`: El ID del usuario que se desea actualizar.
+- **Cuerpo de la solicitud:**
+  ```json
+  {
+    "username": "updatedUser",
+    "email": "updated@example.com",
+    "password": "newPassword"
+  }
+  ```
+- **Respuesta de ejemplo:**
+  ```json
+  {
+    "message": "Usuario actualizado correctamente",
+    "user": {
+      "_id": "userId",
+      "username": "updatedUser",
+      "email": "updated@example.com",
+      "password": "hashedNewPassword"
+    }
+  }
+  ```
+- **Error de ejemplo si el usuario no se encuentra:**
+  ```json
+  {
+    "error": "Usuario no encontrado"
+  }
+  ```
+
+### **Eliminar un Usuario**
+- **Endpoint:** `DELETE /api/auth/user/:id`
+- **Descripción:** Elimina un usuario por ID.
+- **Parámetro de ruta:**
+  - `id`: El ID del usuario que se desea eliminar.
+- **Respuesta de ejemplo:**
+  ```json
+  {
+    "message": "Usuario eliminado correctamente"
+  }
+  ```
+- **Error de ejemplo si el usuario no se encuentra:**
+  ```json
+  {
+    "error": "Usuario no encontrado"
   }
   ```
