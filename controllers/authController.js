@@ -1,25 +1,35 @@
+// Importar dependencias necesarias
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 
+// Cargar configuración de variables de entorno
 dotenv.config();
 
-// Registro de un nuevo usuario
+// Registrar un nuevo usuario
 exports.register = async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
+    // Verificar si el usuario ya existe
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "El usuario ya existe" });
+    }
+
+    // Crear y guardar nuevo usuario
     const user = new User({ username, email, password });
     await user.save();
 
-    // Generación del token JWT
+    // Generar token JWT
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
-    res.status(201).json({ token });
+    return res.status(201).json({ token });
   } catch (error) {
-    res.status(400).json({ error: "Error al registrar el usuario" });
+    console.error("Error al registrar el usuario:", error.message);
+    return res.status(500).json({ error: "Error interno del servidor" });
   }
 };
 
@@ -28,46 +38,46 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    // Verificar existencia del usuario
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ error: "Usuario no encontrado" });
+      return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
+    // Verificar si la contraseña coincide
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
-      return res.status(400).json({ error: "Contraseña incorrecta" });
+      return res.status(401).json({ error: "Credenciales incorrectas" });
     }
 
-    // Generación del token JWT
+    // Generar token JWT
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
-    res.json({ token });
+    return res.json({ token });
   } catch (error) {
-    res.status(400).json({ error: "Error al iniciar sesión" });
+    console.error("Error al iniciar sesión:", error.message);
+    return res.status(500).json({ error: "Error al iniciar sesión" });
   }
 };
 
 // Obtener todos los usuarios
 exports.getUsers = async (req, res) => {
   try {
-    // Consulta para obtener todos los usuarios
-    const users = await User.find(); // Encuentra todos los documentos en la colección de usuarios
-
-    // Verifica si se encontraron usuarios
-    if (users.length === 0) {
+    const users = await User.find();
+    if (!users.length) {
       return res.status(404).json({ error: "No se encontraron usuarios" });
     }
 
-    res.json(users); // Envía la lista de usuarios como respuesta
+    return res.json(users);
   } catch (error) {
-    console.error("Error al obtener los usuarios:", error); // Log del error para depuración
-    res.status(400).json({ error: "Error al obtener los usuarios" });
+    console.error("Error al obtener los usuarios:", error.message);
+    return res.status(500).json({ error: "Error interno del servidor" });
   }
 };
- 
- // Obtener un usuario por ID
+
+// Obtener un usuario por ID
 exports.getUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -75,9 +85,10 @@ exports.getUser = async (req, res) => {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
-    res.json(user);
+    return res.json(user);
   } catch (error) {
-    res.status(400).json({ error: "Error al obtener el usuario" });
+    console.error("Error al obtener el usuario:", error.message);
+    return res.status(500).json({ error: "Error interno del servidor" });
   }
 };
 
@@ -98,9 +109,10 @@ exports.updateUser = async (req, res) => {
     }
 
     await user.save();
-    res.json({ message: "Usuario actualizado correctamente" });
+    return res.json({ message: "Usuario actualizado correctamente" });
   } catch (error) {
-    res.status(400).json({ error: "Error al actualizar el usuario" });
+    console.error("Error al actualizar el usuario:", error.message);
+    return res.status(500).json({ error: "Error interno del servidor" });
   }
 };
 
@@ -112,10 +124,10 @@ exports.deleteUser = async (req, res) => {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
-    await user.deleteOne({_id: req.params.id});
-    res.json({ message: "Usuario eliminado correctamente" });
+    await user.deleteOne();
+    return res.json({ message: "Usuario eliminado correctamente" });
   } catch (error) {
-    console.error("Error al eliminar el usuario:", error);
-    res.status(400).json({ error: "Error al eliminar el usuario" });
+    console.error("Error al eliminar el usuario:", error.message);
+    return res.status(500).json({ error: "Error interno del servidor" });
   }
 };

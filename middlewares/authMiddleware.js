@@ -1,24 +1,25 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
+// Middleware de protección de rutas
 const protect = async (req, res, next) => {
   let token;
 
+  // Verificar si el token está presente en los headers
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
     try {
-      // Obtiene el token del header
-      token = req.headers.authorization.split(" ")[1];
+      token = req.headers.authorization.split(" ")[1]; // Extraer el token del encabezado
 
-      // Verifica el token
+      // Verificar el token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Añade el usuario a la solicitud
+      // Buscar el usuario asociado al token y excluir la contraseña
       req.user = await User.findById(decoded.id).select("-password");
 
-      next();
+      next(); // Continuar con la siguiente función de middleware
     } catch (error) {
       res.status(401).json({ error: "No autorizado, token fallido" });
     }
