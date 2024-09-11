@@ -5,29 +5,29 @@ const User = require("../models/User");
 const protect = async (req, res, next) => {
   let token;
 
-  // Verificar si el token está presente en los headers
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
     try {
-      token = req.headers.authorization.split(" ")[1]; // Extraer el token del encabezado
+      token = req.headers.authorization.split(" ")[1];
+      console.log("Token recibido:", token); // Añadir para depurar
 
-      // Verificar el token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log("Decoded token:", decoded); // Añadir para depurar
 
-      // Buscar el usuario asociado al token y excluir la contraseña
       req.user = await User.findById(decoded.id).select("-password");
+      console.log("Usuario encontrado:", req.user); // Añadir para depurar
 
-      next(); // Continuar con la siguiente función de middleware
+      next();
     } catch (error) {
+      console.error("Error al verificar el token:", error.message);
       res.status(401).json({ error: "No autorizado, token fallido" });
     }
-  }
-
-  if (!token) {
+  } else {
     res.status(401).json({ error: "No autorizado, no se encontró el token" });
   }
 };
 
 module.exports = protect;
+

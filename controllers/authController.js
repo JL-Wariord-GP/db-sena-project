@@ -38,19 +38,16 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Verificar existencia del usuario
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
-    // Verificar si la contraseña coincide
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       return res.status(401).json({ error: "Credenciales incorrectas" });
     }
 
-    // Generar token JWT
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
@@ -130,4 +127,13 @@ exports.deleteUser = async (req, res) => {
     console.error("Error al eliminar el usuario:", error.message);
     return res.status(500).json({ error: "Error interno del servidor" });
   }
+};
+
+// Obtener el usuario autenticado
+exports.getAuthenticatedUser = (req, res) => {
+  // `req.user` fue establecido en el middleware `protect`
+  if (!req.user) {
+    return res.status(404).json({ error: "Usuario no encontrado" });
+  }
+  res.json(req.user); // Devolver los datos del usuario
 };

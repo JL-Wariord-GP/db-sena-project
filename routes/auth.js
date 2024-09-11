@@ -1,3 +1,5 @@
+// routes/auth.js
+
 const express = require("express");
 const {
   register,
@@ -6,16 +8,21 @@ const {
   updateUser,
   deleteUser,
   getUsers,
+  getAuthenticatedUser,
 } = require("../controllers/authController");
+const protect = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
 // Rutas de autenticación y gestión de usuarios
-router.post("/register", register); // Ruta para registrar un usuario
-router.post("/login", login); // Ruta para el inicio de sesión
-router.get("/users", getUsers); // Ruta para obtener todos los usuarios
-router.get("/user/:id", getUser); // Ruta para obtener un usuario por ID
-router.put("/user/:id", updateUser); // Ruta para actualizar un usuario por ID
-router.delete("/user/:id", deleteUser); // Ruta para eliminar un usuario por ID
+router.post("/register", register);
+router.post("/login", login);
+router.get("/users", getUsers);
+router.get("/user/:id", protect, getUser);
+router.put("/user/:id", protect, updateUser);
+router.delete("/user/:id", protect, deleteUser);
+
+// Ruta protegida para obtener el usuario autenticado
+router.get("/me", protect, getAuthenticatedUser);
 
 module.exports = router;
