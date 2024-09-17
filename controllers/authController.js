@@ -14,7 +14,7 @@ exports.register = async (req, res) => {
     // Verificar si el usuario ya existe
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ error: "El usuario ya existe" });
+      return res.status(400).json({ error: "El usuario con este correo electrónico ya está registrado." });
     }
 
     // Crear y guardar nuevo usuario
@@ -40,7 +40,7 @@ exports.login = async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ error: "Usuario no encontrado" });
+      return res.status(404).json({ error: "Credenciales incorrectas" });
     }
 
     const isMatch = await user.matchPassword(password);
