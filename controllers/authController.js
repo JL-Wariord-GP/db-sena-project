@@ -7,21 +7,26 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 // Registrar un nuevo usuario
-exports.register = async (req, res) => {
+const register = async (req, res) => {
   const { username, email, password } = req.body;
 
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: "Todos los campos son obligatorios" });
+  }
+
   try {
-    // Verificar si el usuario ya existe
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ error: "El usuario con este correo electrónico ya está registrado." });
+      return res
+        .status(400)
+        .json({
+          error: "El usuario con este correo electrónico ya está registrado.",
+        });
     }
 
-    // Crear y guardar nuevo usuario
     const user = new User({ username, email, password });
     await user.save();
 
-    // Generar token JWT
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
@@ -34,8 +39,14 @@ exports.register = async (req, res) => {
 };
 
 // Inicio de sesión de usuario
-exports.login = async (req, res) => {
+const login = async (req, res) => {
   const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res
+      .status(400)
+      .json({ error: "Email y contraseña son obligatorios" });
+  }
 
   try {
     const user = await User.findOne({ email });
@@ -52,7 +63,14 @@ exports.login = async (req, res) => {
       expiresIn: "1h",
     });
 
-    return res.json({ token });
+    return res.json({
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+      },
+    });
   } catch (error) {
     console.error("Error al iniciar sesión:", error.message);
     return res.status(500).json({ error: "Error al iniciar sesión" });
@@ -60,13 +78,12 @@ exports.login = async (req, res) => {
 };
 
 // Obtener todos los usuarios
-exports.getUsers = async (req, res) => {
+const getUsers = async (req, res) => {
   try {
-    const users = await User.find();
+    const users = await User.find().select("-password");
     if (!users.length) {
       return res.status(404).json({ error: "No se encontraron usuarios" });
     }
-
     return res.json(users);
   } catch (error) {
     console.error("Error al obtener los usuarios:", error.message);
@@ -75,13 +92,12 @@ exports.getUsers = async (req, res) => {
 };
 
 // Obtener un usuario por ID
-exports.getUser = async (req, res) => {
+const getUser = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).select("-password");
     if (!user) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
-
     return res.json(user);
   } catch (error) {
     console.error("Error al obtener el usuario:", error.message);
@@ -90,7 +106,7 @@ exports.getUser = async (req, res) => {
 };
 
 // Actualizar un usuario por ID
-exports.updateUser = async (req, res) => {
+const updateUser = async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
@@ -114,7 +130,7 @@ exports.updateUser = async (req, res) => {
 };
 
 // Eliminar un usuario por ID
-exports.deleteUser = async (req, res) => {
+const deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
@@ -130,10 +146,24 @@ exports.deleteUser = async (req, res) => {
 };
 
 // Obtener el usuario autenticado
-exports.getAuthenticatedUser = (req, res) => {
-  // `req.user` fue establecido en el middleware `protect`
-  if (!req.user) {
-    return res.status(404).json({ error: "Usuario no encontrado" });
+const getAuthenticatedUser = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+    res.status(200).json(req.user); // Devuelve los datos del usuario autenticado
+  } catch (error) {
+    console.error("Error al obtener el usuario autenticado:", error);
+    res.status(500).json({ error: "Error del servidor" });
   }
-  res.json(req.user); // Devolver los datos del usuario
+};
+
+module.exports = {
+  register,
+  login,
+  getUsers,
+  getUser,
+  updateUser,
+  deleteUser,
+  getAuthenticatedUser,
 };

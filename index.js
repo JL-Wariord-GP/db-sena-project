@@ -2,6 +2,8 @@ const express = require("express");
 const connectDB = require("./config/db");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocs = require("./config/swagger");
 
 // Cargar las variables de entorno
 dotenv.config();
@@ -20,6 +22,9 @@ app.use(express.json());
 
 // Definir las rutas
 app.use("/api/auth", require("./routes/auth"));
+
+// Ruta para la documentación de Swagger
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Ruta para el archivo HTML estático
 app.use(express.static("public"));
